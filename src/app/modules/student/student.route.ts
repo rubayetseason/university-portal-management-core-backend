@@ -10,9 +10,16 @@ router.get('/', StudentController.getAllStudents);
 router.get('/:id', StudentController.getSingleStudent);
 
 router.post(
-    '/',
-    validateRequest(StudentValidation.createZodStudent),
-    StudentController.createStudent
+  '/',
+  validateRequest(StudentValidation.createZodStudent),
+  StudentController.createStudent
 );
+router.patch(
+  '/:id',
+  validateRequest(StudentValidation.updateZodStudent),
+  StudentController.updateStudent
+);
+
+router.delete('/:id', StudentController.deleteStudent);
 
 export const StudentRoutes = router;

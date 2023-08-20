@@ -110,8 +110,35 @@ const getSingleStudent = async (id: string): Promise<Student | null> => {
   return result;
 };
 
+const updateStudent = async (
+  id: string,
+  payload: Partial<Student>
+): Promise<Student> => {
+  const result = await prisma.student.update({
+    where: { id },
+    data: payload,
+  });
+  return result;
+};
+
+const deleteStudent = async (id: string): Promise<Student> => {
+  const result = await prisma.student.delete({
+    where: {
+      id,
+    },
+    include: {
+      academicSemester: true,
+      academicDepartment: true,
+      academicFaculty: true,
+    },
+  });
+  return result;
+};
+
 export const StudentService = {
   createStudent,
   getAllStudents,
   getSingleStudent,
+  updateStudent,
+  deleteStudent,
 };
