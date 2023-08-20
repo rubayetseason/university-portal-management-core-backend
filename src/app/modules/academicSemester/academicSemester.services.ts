@@ -1,7 +1,10 @@
-import { AcademicSemester, PrismaClient } from '@prisma/client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { AcademicSemester, Prisma, PrismaClient } from '@prisma/client';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
+import { AcademicSemesterSearchAbleFields } from './academicSemester.constants';
+import { IAcademicSemesterFilterRequest } from './academicSemester.interface';
 
 const prisma = new PrismaClient();
 
@@ -15,12 +18,60 @@ const createSemester = async (
 };
 
 const getAllSemesters = async (
-  filters,
+  filters: IAcademicSemesterFilterRequest,
   options: IPaginationOptions
 ): Promise<IGenericResponse<AcademicSemester[]>> => {
   const { page, limit, skip } = paginationHelpers.calculatePagination(options);
 
+  const { searchTerm, ...filterData } = filters;
+
+  const andConditions = [];
+  if (searchTerm) {
+    andConditions.push({
+      OR: AcademicSemesterSearchAbleFields.map(field => ({
+        [field]: {
+          contains: searchTerm,
+          mode: 'insensitive',
+        },
+      })),
+    });
+  }
+
+  // where: {
+  //   OR: [
+  //     {
+  //       title: {
+  //         contains: searchTerm,
+  //         mode: 'insensitive',
+  //       },
+  //     },
+  //     {
+  //       code: {
+  //         contains: searchTerm,
+  //         mode: 'insensitive',
+  //       },
+  //     },
+  //   ],
+  // },
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map(key => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
+  // person = {name: 'season'}
+  // name = person[name]
+
+  const whereCondition: Prisma.AcademicSemesterWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
   const result = await prisma.academicSemester.findMany({
+    where: whereCondition,
+
     skip,
     take: limit,
   });
