@@ -3,8 +3,8 @@ import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
-import { IBuildingFilterRequest } from './building.interface';
 import { buildingSearchableFields } from './building.constants';
+import { IBuildingFilterRequest } from './building.interface';
 
 const createBuilding = async (data: Building): Promise<Building> => {
   const result = await prisma.building.create({

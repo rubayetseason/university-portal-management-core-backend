@@ -19,8 +19,8 @@ router.post(
 
 router.patch(
   '/:id',
-  validateRequest(BuildingValidation.updateZodBuilding),
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
+  validateRequest(BuildingValidation.updateZodBuilding),
   BuildingController.updateBuilding
 );
 
