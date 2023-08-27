@@ -58,10 +58,10 @@ const updateZodFaculty = z.object({
   }),
 });
 
-const assignOrRemoveCourses = z.object({
+const assignOrRemoveZodCourses = z.object({
   body: z.object({
     courses: z.array(z.string(), {
-      required_error: 'Courses are required',
+      required_error: 'Course is required',
     }),
   }),
 });
@@ -69,5 +69,5 @@ const assignOrRemoveCourses = z.object({
 export const FacultyValidation = {
   createZodFaculty,
   updateZodFaculty,
-  assignOrRemoveCourses,
+  assignOrRemoveZodCourses,
 };
