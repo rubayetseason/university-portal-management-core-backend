@@ -166,7 +166,7 @@ model SemesterRegistration {
   createdAt          DateTime                   @default(now())
   updatedAt          DateTime                   @updatedAt
   academicSemesterId String
-  acdemicSemester    AcademicSemester           @relation(fields: [academicSemesterId], references: [id])
+  academicSemester   AcademicSemester           @relation(fields: [academicSemesterId], references: [id])
 
   @@map("semester_registrations")
 }
