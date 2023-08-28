@@ -20,7 +20,7 @@ import { ISemesterRegistrationFilterRequest } from './semesterRegistration.inter
 const createSemesterRegistration = async (
   data: SemesterRegistration
 ): Promise<SemesterRegistration> => {
-  const isAnySemesterRegUpcomingOrOngoing =
+  const isAnySemesterRegistrationUpcomingOrOngoing =
     await prisma.semesterRegistration.findFirst({
       where: {
         OR: [
@@ -34,10 +34,10 @@ const createSemesterRegistration = async (
       },
     });
 
-  if (isAnySemesterRegUpcomingOrOngoing) {
+  if (isAnySemesterRegistrationUpcomingOrOngoing) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      `Thers is already an ${isAnySemesterRegUpcomingOrOngoing.status} registration.`
+      `Thers is already an ${isAnySemesterRegistrationUpcomingOrOngoing.status} registration.`
     );
   }
 
