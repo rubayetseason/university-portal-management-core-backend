@@ -12,7 +12,7 @@ const createSemester = catchAsync(async (req: Request, res: Response) => {
   sendResponse<AcademicSemester>(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Semester created successfully',
+    message: 'Academic semester created successfully',
     data: result,
   });
 });
@@ -29,7 +29,7 @@ const getAllSemester = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Semester created successfully',
+    message: 'Academic semesters fetched successfully',
     meta: result.meta,
     data: result.data,
   });
@@ -40,7 +40,7 @@ const getSingleSemester = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Semester data fetched',
+    message: 'Academic semester fetched successfully',
     data: result,
   });
 });
@@ -51,7 +51,7 @@ const updateSemester = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Academic Semster updated successfully',
+    message: 'Academic semester updated successfully',
     data: result,
   });
 });
@@ -62,7 +62,7 @@ const deleteSemester = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Academic Semster delete successfully',
+    message: 'Academic semster deleted successfully',
     data: result,
   });
 });

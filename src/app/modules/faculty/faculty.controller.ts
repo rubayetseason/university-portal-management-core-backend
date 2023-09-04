@@ -57,7 +57,7 @@ const deleteFaculty = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Faculty delete successfully',
+    message: 'Faculty deleted successfully',
     data: result,
   });
 });

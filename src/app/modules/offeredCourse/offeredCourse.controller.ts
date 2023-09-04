@@ -39,7 +39,7 @@ const getSingleOfferedCourses = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'Offered dourse fetched successfully',
+      message: 'Offered course fetched successfully',
       data: result,
     });
   }

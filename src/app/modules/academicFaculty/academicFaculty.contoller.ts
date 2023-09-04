@@ -12,7 +12,7 @@ const createAcademicFaculty = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'AcademicFaculty created successfully',
+      message: 'Academic faculty created successfully',
       data: result,
     });
   }
@@ -29,7 +29,7 @@ const getAllAcademicFaculties = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'AcademicFaculties fetched successfully',
+      message: 'Academic faculties fetched successfully',
       meta: result.meta,
       data: result.data,
     });
@@ -43,7 +43,7 @@ const getSingleAcademicFaculty = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'AcademicFaculty fetched successfully',
+      message: 'Academic faculty fetched successfully',
       data: result,
     });
   }
@@ -59,7 +59,7 @@ const updateAcademicFaculty = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'AcademicFaculty updated successfully',
+      message: 'Academic faculty updated successfully',
       data: result,
     });
   }
@@ -72,7 +72,7 @@ const deleteAcademicFaculty = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: 'AcademicFaculty delete successfully',
+      message: 'Academic faculty deleted successfully',
       data: result,
     });
   }

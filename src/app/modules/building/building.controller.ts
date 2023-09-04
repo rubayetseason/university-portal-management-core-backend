@@ -3,15 +3,15 @@ import httpStatus from 'http-status';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
-import { BuildingService } from './building.services';
 import { buildingFilterableFields } from './building.constants';
+import { BuildingService } from './building.services';
 
 const createBuilding = catchAsync(async (req: Request, res: Response) => {
   const result = await BuildingService.createBuilding(req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Building created successfully!',
+    message: 'Building created successfully',
     data: result,
   });
 });
@@ -24,7 +24,7 @@ const getAllBuildings = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Building fetched successfully!',
+    message: 'Buildings fetched successfully',
     meta: result.meta,
     data: result.data,
   });
@@ -58,7 +58,7 @@ const deleteBuilding = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Building delete successfully',
+    message: 'Building deleted successfully',
     data: result,
   });
 });
