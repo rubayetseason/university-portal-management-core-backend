@@ -18,6 +18,7 @@ import {
 const createOfferedCourses = async (
   data: ICreateOfferedCourse
 ): Promise<OfferedCourse[]> => {
+    //destructure data
   const { academicDepartmentId, semesterRegistrationId, courseIds } = data;
   const result: OfferedCourse[] = [];
 
@@ -31,6 +32,7 @@ const createOfferedCourses = async (
     });
 
     if (!alreadyExist) {
+        //create offeredCourse data for everysingle individual course data using loop
       const insertOfferedCourse = await prisma.offeredCourse.create({
         data: {
           academicDepartmentId,
