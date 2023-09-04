@@ -137,7 +137,7 @@ const updateSemesterRegistration = async (
   id: string,
   payload: Partial<SemesterRegistration>
 ): Promise<SemesterRegistration> => {
-  console.log(payload.status);
+  //check if the semester exists
   const isExist = await prisma.semesterRegistration.findUnique({
     where: {
       id,
@@ -145,8 +145,12 @@ const updateSemesterRegistration = async (
   });
 
   if (!isExist) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Data not found!');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Data not found');
   }
+
+
+  // UPCOMING -> ONGOING -> ENDED
+  //cannot go directly from UPCOMING to ENDED and likewise
 
   if (
     payload.status &&
@@ -170,6 +174,7 @@ const updateSemesterRegistration = async (
     );
   }
 
+  //update the semester
   const result = await prisma.semesterRegistration.update({
     where: {
       id,
