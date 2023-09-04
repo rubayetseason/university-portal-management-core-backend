@@ -47,6 +47,7 @@ const createOfferedCourses = async (
         },
       });
 
+      //push each created offered course data into result array
       result.push(insertOfferedCourse);
     }
   });
