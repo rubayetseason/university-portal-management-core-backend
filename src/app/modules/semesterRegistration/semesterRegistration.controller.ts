@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 import catchAsync from '../../../shared/catchAsync';
@@ -83,10 +84,29 @@ const deleteSemesterRegistration = catchAsync(
   }
 );
 
+const startMyRegistration = catchAsync(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  // console.log(user);
+  //here the user will give {role: 'student', userId: '202300001'}
+  //the user property is set in auth service in the req
+
+  const result = await SemesterRegistrationService.startMyRegistration(
+    user.userId
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Student semester registration started successfully',
+    data: result,
+  });
+});
+
 export const SemesterRegistrationController = {
   createSemesterRegistration,
   getAllSemesterRegistration,
   getSingleSemesterRegistration,
   updateSemesterRegistration,
   deleteSemesterRegistration,
+  startMyRegistration,
 };
