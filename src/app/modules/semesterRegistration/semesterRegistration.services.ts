@@ -387,6 +387,95 @@ const enrollIntoCourse = async (
   };
 };
 
+const withdrawFromCourse = async (
+  authUserId: string,
+  payload: IEnrollCoursePayload
+) => {
+  //gotten student information
+  const student = await prisma.student.findFirst({
+    where: {
+      studentId: authUserId,
+    },
+  });
+
+  if (!student) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Student information not found');
+  }
+
+  //gotten semester information
+  const semesterRegistration = await prisma.semesterRegistration.findFirst({
+    where: {
+      status: SemesterRegistrationStatus.ONGOING,
+    },
+  });
+
+  if (!semesterRegistration) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Semester registration not found');
+  }
+
+  //gotten offeredCourse information
+  const offeredCourse = await prisma.offeredCourse.findFirst({
+    where: {
+      id: payload.offeredCourseId,
+    },
+    include: {
+      course: true,
+    },
+  });
+
+  if (!offeredCourse) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Offered course not found');
+  }
+
+  await prisma.$transaction(async transactionClient => {
+    //created studentEnrolledCourse
+    await transactionClient.studentSemesterRegistrationCourse.delete({
+      where: {
+        //delete using composite key
+        semesterRegistrationId_studentId_offeredCourseId: {
+          semesterRegistrationId: semesterRegistration?.id,
+          studentId: student?.id,
+          offeredCourseId: payload.offeredCourseId,
+        },
+      },
+    });
+
+    //enrolledStudent count increase
+    await transactionClient.offeredCourseSection.update({
+      where: {
+        id: payload.offeredCourseSectionId,
+      },
+      data: {
+        currentlyEnrolledStudent: {
+          decrement: 1,
+        },
+      },
+    });
+
+    //studentSemesterRegistration credits increase
+    await transactionClient.studentSemesterRegistration.updateMany({
+      where: {
+        student: {
+          id: student.id,
+        },
+        semesterRegistration: {
+          id: semesterRegistration.id,
+        },
+      },
+      data: {
+        totalCreditsTaken: {
+          // got offeredCourse.course.credits cause included it at offeredCourse above
+          decrement: offeredCourse.course.credits,
+        },
+      },
+    });
+  });
+
+  return {
+    message: 'Successfully withdrawn from course',
+  };
+};
+
 export const SemesterRegistrationService = {
   createSemesterRegistration,
   getAllSemesterRegistration,
@@ -395,4 +484,5 @@ export const SemesterRegistrationService = {
   deleteSemesterRegistration,
   startMyRegistration,
   enrollIntoCourse,
+  withdrawFromCourse,
 };

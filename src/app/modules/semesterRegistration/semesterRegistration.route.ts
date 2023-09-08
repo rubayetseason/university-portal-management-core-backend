@@ -26,6 +26,12 @@ router.post(
 );
 
 router.post(
+  '/withdraw-from-course',
+  auth(ENUM_USER_ROLE.STUDENT),
+  SemesterRegistrationController.withdrawFromCourse
+);
+
+router.post(
   '/',
   validateRequest(SemesterRegistrationValidation.createZodSemesterRegistration),
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
