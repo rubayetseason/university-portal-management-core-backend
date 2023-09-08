@@ -330,6 +330,7 @@ const enrollIntoCourse = async (
     throw new ApiError(httpStatus.NOT_FOUND, 'Section not found');
   }
 
+  //max capacity error handling
   if (
     offeredCourseSection.maxCapacity &&
     offeredCourseSection.currentlyEnrolledStudent &&
