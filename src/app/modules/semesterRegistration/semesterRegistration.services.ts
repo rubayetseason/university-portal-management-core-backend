@@ -310,6 +310,9 @@ const enrollIntoCourse = async (
     where: {
       id: payload.offeredCourseId,
     },
+    include: {
+      course: true,
+    },
   });
 
   if (!offeredCourse) {
@@ -327,17 +330,60 @@ const enrollIntoCourse = async (
     throw new ApiError(httpStatus.NOT_FOUND, 'Section not found');
   }
 
-  //created studentEnrolledCourse
-  const enrollCourse = await prisma.studentSemesterRegistrationCourse.create({
-    data: {
-      studentId: student?.id,
-      semesterRegistrationId: semesterRegistration?.id,
-      offeredCourseId: payload.offeredCourseId,
-      offeredCourseSectionId: payload.offeredCourseSectionId,
-    },
+  if (
+    offeredCourseSection.maxCapacity &&
+    offeredCourseSection.currentlyEnrolledStudent &&
+    offeredCourseSection.currentlyEnrolledStudent >=
+      offeredCourseSection.maxCapacity
+  ) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Student capacity is full');
+  }
+
+  await prisma.$transaction(async transactionClient => {
+    //created studentEnrolledCourse
+    await transactionClient.studentSemesterRegistrationCourse.create({
+      data: {
+        studentId: student?.id,
+        semesterRegistrationId: semesterRegistration?.id,
+        offeredCourseId: payload.offeredCourseId,
+        offeredCourseSectionId: payload.offeredCourseSectionId,
+      },
+    });
+
+    //enrolledStudent count increase
+    await transactionClient.offeredCourseSection.update({
+      where: {
+        id: payload.offeredCourseSectionId,
+      },
+      data: {
+        currentlyEnrolledStudent: {
+          increment: 1,
+        },
+      },
+    });
+
+    //studentSemesterRegistration credits increase
+    await transactionClient.studentSemesterRegistration.updateMany({
+      where: {
+        student: {
+          id: student.id,
+        },
+        semesterRegistration: {
+          id: semesterRegistration.id,
+        },
+      },
+      data: {
+        totalCreditsTaken: {
+          // got offeredCourse.course.credits cause included it at offeredCourse above
+          increment: offeredCourse.course.credits,
+        },
+      },
+    });
   });
 
-  return enrollCourse;
+  return {
+    message: 'Successfully enrolled into course',
+  };
 };
 
 export const SemesterRegistrationService = {
