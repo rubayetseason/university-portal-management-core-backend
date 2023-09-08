@@ -20,6 +20,12 @@ router.post(
 );
 
 router.post(
+  '/enroll-into-course',
+  auth(ENUM_USER_ROLE.STUDENT),
+  SemesterRegistrationController.enrollIntoCourse
+);
+
+router.post(
   '/',
   validateRequest(SemesterRegistrationValidation.createZodSemesterRegistration),
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
