@@ -22,12 +22,14 @@ router.post(
 router.post(
   '/enroll-into-course',
   auth(ENUM_USER_ROLE.STUDENT),
+  validateRequest(SemesterRegistrationValidation.enrollOrWithdrawZodCourse),
   SemesterRegistrationController.enrollIntoCourse
 );
 
 router.post(
   '/withdraw-from-course',
   auth(ENUM_USER_ROLE.STUDENT),
+  validateRequest(SemesterRegistrationValidation.enrollOrWithdrawZodCourse),
   SemesterRegistrationController.withdrawFromCourse
 );
 
