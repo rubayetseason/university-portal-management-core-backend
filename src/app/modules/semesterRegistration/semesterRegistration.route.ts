@@ -34,6 +34,12 @@ router.post(
 );
 
 router.post(
+  '/confirm-my-registration',
+  auth(ENUM_USER_ROLE.STUDENT),
+  SemesterRegistrationController.confirmMyRegistration
+);
+
+router.post(
   '/',
   validateRequest(SemesterRegistrationValidation.createZodSemesterRegistration),
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
