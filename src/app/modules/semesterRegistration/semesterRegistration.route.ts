@@ -46,6 +46,12 @@ router.post(
 );
 
 router.post(
+  '/:id/start-new-semester',
+  auth(ENUM_USER_ROLE.ADMIN),
+  SemesterRegistrationController.startNewSemester
+);
+
+router.post(
   '/',
   validateRequest(SemesterRegistrationValidation.createZodSemesterRegistration),
   auth(ENUM_USER_ROLE.SUPER_ADMIN, ENUM_USER_ROLE.ADMIN),
