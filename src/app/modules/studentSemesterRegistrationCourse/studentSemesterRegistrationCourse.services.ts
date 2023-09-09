@@ -201,7 +201,7 @@ const withdrawFromCourse = async (
   };
 };
 
-export const StudentSemesterRegistrationCourse = {
+export const StudentSemesterRegistrationCourseService = {
   enrollIntoCourse,
   withdrawFromCourse,
 };

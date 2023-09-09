@@ -1,17 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  Course,
+  OfferedCourse,
   Prisma,
   SemesterRegistration,
   SemesterRegistrationStatus,
   StudentSemesterRegistration,
+  StudentSemesterRegistrationCourse,
 } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/ApiError';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
+import { asyncForEach } from '../../../shared/forEachHelper';
 import prisma from '../../../shared/prisma';
-import { StudentSemesterRegistrationCourse } from '../studentSemesterRegistrationCourse/studentSemesterRegistrationCourse.services';
+import { StudentSemesterRegistrationCourseService } from '../studentSemesterRegistrationCourse/studentSemesterRegistrationCourse.services';
 import {
   semesterRegistrationRelationalFields,
   semesterRegistrationRelationalFieldsMapper,
@@ -284,7 +288,7 @@ const enrollIntoCourse = async (
   authUserId: string,
   payload: IEnrollCoursePayload
 ): Promise<{ message: string }> => {
-  return StudentSemesterRegistrationCourse.enrollIntoCourse(
+  return StudentSemesterRegistrationCourseService.enrollIntoCourse(
     authUserId,
     payload
   );
@@ -294,7 +298,7 @@ const withdrawFromCourse = async (
   authUserId: string,
   payload: IEnrollCoursePayload
 ): Promise<{ message: string }> => {
-  return StudentSemesterRegistrationCourse.withdrawFromCourse(
+  return StudentSemesterRegistrationCourseService.withdrawFromCourse(
     authUserId,
     payload
   );
@@ -397,7 +401,7 @@ const getMyRegistration = async (authUserId: string) => {
   return { semesterRegistration, studentSemesterRegistration };
 };
 
-const startNewSemester = async (id: string) => {
+const startNewSemester = async (id: string): Promise<{ message: string }> => {
   const semesterRegistration = await prisma.semesterRegistration.findUnique({
     where: {
       id,
@@ -449,6 +453,71 @@ const startNewSemester = async (id: string) => {
         isCurrent: true,
       },
     });
+
+    //this will return an array of students of those who have confirmed their registration
+    const studentSemesterRegistrations =
+      await prisma.studentSemesterRegistration.findMany({
+        where: {
+          semesterRegistration: {
+            id,
+          },
+          isConfirmed: true,
+        },
+      });
+
+    asyncForEach(
+      studentSemesterRegistrations,
+      async (studentSemReg: StudentSemesterRegistration) => {
+        const studentSemRegCourses =
+          await prisma.studentSemesterRegistrationCourse.findMany({
+            where: {
+              semesterRegistration: { id },
+              student: { id: studentSemReg.studentId },
+            },
+            include: {
+              offeredCourse: {
+                include: {
+                  course: true,
+                },
+              },
+            },
+          });
+
+        asyncForEach(
+          studentSemRegCourses,
+          async (
+            item: StudentSemesterRegistrationCourse & {
+              offeredCourse: OfferedCourse & {
+                course: Course;
+              };
+            }
+          ) => {
+            const isExistEnrolledData =
+              await prisma.studentEnrolledCourse.findFirst({
+                where: {
+                  studentId: item.studentId,
+                  courseId: item.offeredCourse.courseId,
+                  academicSemesterId: semesterRegistration.academicSemesterId,
+                },
+              });
+
+            if (!isExistEnrolledData) {
+              const enrolledCourseData = {
+                studentId: item.studentId,
+                courseId: item.offeredCourse.courseId,
+                academicSemesterId: semesterRegistration.academicSemesterId,
+              };
+
+              await prisma.studentEnrolledCourse.create({
+                data: enrolledCourseData,
+              });
+            }
+          }
+        );
+      }
+    );
+
+    //all these gotten data will store in studentEnrolledCourse table
   });
 
   return {
