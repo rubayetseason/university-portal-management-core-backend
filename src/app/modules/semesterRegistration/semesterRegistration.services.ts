@@ -476,25 +476,27 @@ const startNewSemester = async (id: string): Promise<{ message: string }> => {
             {
               studentId: studentSemReg.studentId,
               academicSemesterId: semesterRegistration.academicSemesterId,
-              totalPaymentAmount
+              totalPaymentAmount,
             }
           );
         }
 
         const studentSemRegCourses =
-          await prisma.studentSemesterRegistrationCourse.findMany({
-            where: {
-              semesterRegistration: { id },
-              student: { id: studentSemReg.studentId },
-            },
-            include: {
-              offeredCourse: {
-                include: {
-                  course: true,
+          await currentTransactionClient.studentSemesterRegistrationCourse.findMany(
+            {
+              where: {
+                semesterRegistration: { id },
+                student: { id: studentSemReg.studentId },
+              },
+              include: {
+                offeredCourse: {
+                  include: {
+                    course: true,
+                  },
                 },
               },
-            },
-          });
+            }
+          );
 
         asyncForEach(
           studentSemRegCourses,
@@ -506,7 +508,7 @@ const startNewSemester = async (id: string): Promise<{ message: string }> => {
             }
           ) => {
             const isExistEnrolledData =
-              await prisma.studentEnrolledCourse.findFirst({
+              await currentTransactionClient.studentEnrolledCourse.findFirst({
                 where: {
                   studentId: item.studentId,
                   courseId: item.offeredCourse.courseId,
@@ -521,7 +523,7 @@ const startNewSemester = async (id: string): Promise<{ message: string }> => {
                 academicSemesterId: semesterRegistration.academicSemesterId,
               };
 
-              await prisma.studentEnrolledCourse.create({
+              await currentTransactionClient.studentEnrolledCourse.create({
                 data: enrolledCourseData,
               });
             }
