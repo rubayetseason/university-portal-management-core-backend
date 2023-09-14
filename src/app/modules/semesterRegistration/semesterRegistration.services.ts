@@ -433,7 +433,6 @@ const startNewSemester = async (id: string): Promise<{ message: string }> => {
   }
 
   //implement update such that when a semester is turned true, other semesters are false
-
   //turn those semesters false that are previously true
   await prisma.$transaction(async currentTransactionClient => {
     await currentTransactionClient.academicSemester.updateMany({
