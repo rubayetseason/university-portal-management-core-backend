@@ -15,6 +15,7 @@ import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import { asyncForEach } from '../../../shared/forEachHelper';
 import prisma from '../../../shared/prisma';
+import { StudentSemesterPaymentService } from '../studentSemesterPayment/studentSemesterPayment.services';
 import { StudentSemesterRegistrationCourseService } from '../studentSemesterRegistrationCourse/studentSemesterRegistrationCourse.services';
 import {
   semesterRegistrationRelationalFields,
@@ -467,6 +468,19 @@ const startNewSemester = async (id: string): Promise<{ message: string }> => {
     asyncForEach(
       studentSemesterRegistrations,
       async (studentSemReg: StudentSemesterRegistration) => {
+        if (studentSemReg.totalCreditsTaken) {
+          const totalPaymentAmount = studentSemReg.totalCreditsTaken * 5000;
+
+          await StudentSemesterPaymentService.createSemesterPayment(
+            currentTransactionClient,
+            {
+              studentId: studentSemReg.studentId,
+              academicSemesterId: semesterRegistration.academicSemesterId,
+              totalPaymentAmount
+            }
+          );
+        }
+
         const studentSemRegCourses =
           await prisma.studentSemesterRegistrationCourse.findMany({
             where: {
