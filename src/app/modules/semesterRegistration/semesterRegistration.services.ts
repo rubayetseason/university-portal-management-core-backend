@@ -15,6 +15,7 @@ import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import { asyncForEach } from '../../../shared/forEachHelper';
 import prisma from '../../../shared/prisma';
+import { StudentEnrolledCourseMarksService } from '../studentEnrolledCourseMarks/studentEnrolledCourseMarks.services';
 import { StudentSemesterPaymentService } from '../studentSemesterPayment/studentSemesterPayment.services';
 import { StudentSemesterRegistrationCourseService } from '../studentSemesterRegistrationCourse/studentSemesterRegistrationCourse.services';
 import {
@@ -523,9 +524,19 @@ const startNewSemester = async (id: string): Promise<{ message: string }> => {
                 academicSemesterId: semesterRegistration.academicSemesterId,
               };
 
-              await currentTransactionClient.studentEnrolledCourse.create({
-                data: enrolledCourseData,
-              });
+              const studentEnrolledCourseData =
+                await currentTransactionClient.studentEnrolledCourse.create({
+                  data: enrolledCourseData,
+                });
+
+              await StudentEnrolledCourseMarksService.createStudentEnrolledCourseDefaultMarks(
+                currentTransactionClient,
+                {
+                  studentId: item.studentId,
+                  studentEnrolledCourseId: studentEnrolledCourseData.id,
+                  academicSemesterId: semesterRegistration.academicSemesterId,
+                }
+              );
             }
           }
         );
