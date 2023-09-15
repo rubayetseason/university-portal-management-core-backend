@@ -26,12 +26,12 @@ router.patch(
   StudentEnrolledCourseMarksConroller.updateStudentMarks
 );
 router.patch(
-  '/update-final-marks',
+  '/update-final-total-marks',
   auth(ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.FACULTY),
   validateRequest(
-    StudentEnrolledCourseMarksValidation.updateZodStudentCourseFinalMarks
+    StudentEnrolledCourseMarksValidation.updateZodStudentCourseFinalTotalMarks
   ),
-  StudentEnrolledCourseMarksConroller.updateFinalMarks
+  StudentEnrolledCourseMarksConroller.updateFinalTotalMarks
 );
 
 export const StudentEnrolledCourseMarksRoutes = router;

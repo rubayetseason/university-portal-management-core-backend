@@ -3,6 +3,7 @@ import {
   ExamType,
   PrismaClient,
   StudentEnrolledCourseMark,
+  StudentEnrolledCourseStatus,
 } from '@prisma/client';
 import {
   DefaultArgs,
@@ -14,7 +15,11 @@ import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 import prisma from '../../../shared/prisma';
-import { IStudentEnrolledCourseMarksFilterRequest } from './studentEnrolledCourseMarks.interface';
+import {
+  IStudentEnrolledCourseMarksFilterRequest,
+  IUpdateStudentCourseFinalMarksPayload,
+  IUpdateStudentMarksPayload,
+} from './studentEnrolledCourseMarks.interface';
 import { StudentEnrolledCourseMarksUtils } from './studentEnrolledCourseMarks.utils';
 
 type IStudentEnrolledCourseMarkPayload = {
@@ -151,7 +156,7 @@ const getAllMarks = async (
   };
 };
 
-const updateStudentMarks = async (payload: any) => {
+const updateStudentMarks = async (payload: IUpdateStudentMarksPayload) => {
   const { studentId, academicSemesterId, courseId, examType, marks } = payload;
 
   //check if studentmarks is there
@@ -195,8 +200,206 @@ const updateStudentMarks = async (payload: any) => {
   return updatedStudentMarks;
 };
 
+const updateFinalTotalMarks = async (
+  payload: IUpdateStudentCourseFinalMarksPayload
+) => {
+  const { studentId, academicSemesterId, courseId } = payload;
+
+  //get studentEnrolledCourse data for that semester (includes grade, totalMarks, status)
+  const studentEnrolledCourse = await prisma.studentEnrolledCourse.findFirst({
+    where: {
+      student: {
+        id: studentId,
+      },
+      academicSemester: {
+        id: academicSemesterId,
+      },
+      course: {
+        id: courseId,
+      },
+    },
+  });
+
+  if (!studentEnrolledCourse) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      'Student enrolled course data not found'
+    );
+  }
+
+  //get array of midterm, final marks of that semester for that student
+  const studentEnrolledCourseMarks =
+    await prisma.studentEnrolledCourseMark.findMany({
+      where: {
+        student: {
+          id: studentId,
+        },
+        academicSemester: {
+          id: academicSemesterId,
+        },
+        studentEnrolledCourse: {
+          course: {
+            id: courseId,
+          },
+        },
+      },
+    });
+
+  if (!studentEnrolledCourseMarks.length) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      'student enrolled course mark not found'
+    );
+  }
+
+  //take midterm marks
+  const midTermMarks =
+    studentEnrolledCourseMarks.find(item => item.examType === ExamType.MIDTERM)
+      ?.marks || 0;
+  //take final marks
+  const finalTermMarks =
+    studentEnrolledCourseMarks.find(item => item.examType === ExamType.FINAL)
+      ?.marks || 0;
+
+  //take 40% marks from midterm and 60% marks from final
+  const totalFinalMarks =
+    Math.ceil(midTermMarks * 0.4) + Math.ceil(finalTermMarks * 0.6);
+
+  //determine grade & cgpa
+
+  //calculate grade
+  const result =
+    StudentEnrolledCourseMarksUtils.getGradeFromMarks(totalFinalMarks);
+
+  //update grade, status, point
+  await prisma.studentEnrolledCourse.updateMany({
+    where: {
+      student: {
+        id: studentId,
+      },
+      academicSemester: {
+        id: academicSemesterId,
+      },
+      course: {
+        id: courseId,
+      },
+    },
+    data: {
+      grade: result.grade,
+      point: result.point,
+      totalMarks: totalFinalMarks,
+      status: StudentEnrolledCourseStatus.COMPLETED,
+    },
+  });
+
+  //get previous semester results
+  const grades = await prisma.studentEnrolledCourse.findMany({
+    where: {
+      student: {
+        id: studentId,
+      },
+      status: StudentEnrolledCourseStatus.COMPLETED,
+    },
+    include: {
+      course: true,
+    },
+  });
+
+  const academicResult =
+    await StudentEnrolledCourseMarksUtils.calculateCGPAAndGrade(grades);
+
+  //get studentAcademicInfo
+  const studentAcademicInfo = await prisma.studentAcademicInfo.findFirst({
+    where: {
+      student: {
+        id: studentId,
+      },
+    },
+  });
+
+  //if studentAcademicInfo exists then update
+  if (studentAcademicInfo) {
+    await prisma.studentAcademicInfo.update({
+      where: {
+        id: studentAcademicInfo.id,
+      },
+      data: {
+        totalCompletedCredit: academicResult.totalCompletedCredit,
+        cgpa: academicResult.cgpa,
+      },
+    });
+  } else {
+    //if studentAcademicInfo doesnt exists then create new
+    await prisma.studentAcademicInfo.create({
+      data: {
+        student: {
+          connect: {
+            id: studentId,
+          },
+        },
+        totalCompletedCredit: academicResult.totalCompletedCredit,
+        cgpa: academicResult.cgpa,
+      },
+    });
+  }
+
+  return grades;
+};
+
+const getMyCourseMarks = async (
+  filters: IStudentEnrolledCourseMarksFilterRequest,
+  options: IPaginationOptions,
+  authUser: any
+): Promise<IGenericResponse<StudentEnrolledCourseMark[]>> => {
+  const { limit, page } = paginationHelpers.calculatePagination(options);
+
+  const student = await prisma.student.findFirst({
+    where: {
+      studentId: authUser.id,
+    },
+  });
+
+  if (!student) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Student not found');
+  }
+
+  const marks = await prisma.studentEnrolledCourseMark.findMany({
+    where: {
+      student: {
+        id: student.id,
+      },
+      academicSemester: {
+        id: filters.academicSemesterId,
+      },
+      studentEnrolledCourse: {
+        course: {
+          id: filters.courseId,
+        },
+      },
+    },
+    include: {
+      studentEnrolledCourse: {
+        include: {
+          course: true,
+        },
+      },
+    },
+  });
+
+  return {
+    meta: {
+      total: marks.length,
+      page,
+      limit,
+    },
+    data: marks,
+  };
+};
+
 export const StudentEnrolledCourseMarksService = {
   createStudentEnrolledCourseDefaultMarks,
   getAllMarks,
   updateStudentMarks,
+  updateFinalTotalMarks,
+  getMyCourseMarks,
 };

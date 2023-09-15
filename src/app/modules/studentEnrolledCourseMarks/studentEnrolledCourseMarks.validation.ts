@@ -22,7 +22,7 @@ const updateZodStudentMarks = z.object({
   }),
 });
 
-const updateZodStudentCourseFinalMarks = z.object({
+const updateZodStudentCourseFinalTotalMarks = z.object({
   body: z.object({
     academicSemesterId: z.string({
       required_error: 'Academic semester id is required',
@@ -38,5 +38,5 @@ const updateZodStudentCourseFinalMarks = z.object({
 
 export const StudentEnrolledCourseMarksValidation = {
   updateZodStudentMarks,
-  updateZodStudentCourseFinalMarks,
+  updateZodStudentCourseFinalTotalMarks,
 };
