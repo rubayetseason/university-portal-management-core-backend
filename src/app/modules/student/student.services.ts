@@ -9,7 +9,10 @@ import {
   studentRelationalFieldsMapper,
   studentSearchableFields,
 } from './student.constants';
-import { IStudentFilterRequest } from './student.interface';
+import {
+  IMyCoursesPayloadFilter,
+  IStudentFilterRequest,
+} from './student.interface';
 
 const createStudent = async (data: Student): Promise<Student> => {
   const result = await prisma.student.create({
@@ -135,10 +138,41 @@ const deleteStudent = async (id: string): Promise<Student> => {
   return result;
 };
 
+const myCourses = async (
+  authUserId: string,
+  filter: IMyCoursesPayloadFilter
+) => {
+  //get currently running semester
+  if (!filter.academicSemesterId) {
+    const currentSemester = await prisma.academicSemester.findFirst({
+      where: {
+        isCurrent: true,
+      },
+    });
+    filter.academicSemesterId = currentSemester?.id;
+  }
+
+  //get courses data
+  const result = await prisma.studentEnrolledCourse.findMany({
+    where: {
+      student: {
+        studentId: authUserId,
+      },
+      ...filter,
+    },
+    include: {
+      course: true,
+    },
+  });
+
+  return result;
+};
+
 export const StudentService = {
   createStudent,
   getAllStudents,
   getSingleStudent,
   updateStudent,
   deleteStudent,
+  myCourses,
 };
