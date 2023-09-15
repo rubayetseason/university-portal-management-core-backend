@@ -33,7 +33,7 @@ const createOfferedCourseSection = async (
   if (!isExistOfferedCourse) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      'Offered Course does not exist!'
+      'Offered course does not exist'
     );
   }
 
@@ -52,7 +52,7 @@ const createOfferedCourseSection = async (
   });
 
   if (offerCourseSectionData) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Course Section already exists');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Course section already exists');
   }
 
   const createSection = await prisma.$transaction(async transactionClient => {
