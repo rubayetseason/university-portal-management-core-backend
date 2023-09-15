@@ -9,7 +9,11 @@ import {
   facultyRelationalFieldsMapper,
   facultySearchableFields,
 } from './faculty.constants';
-import { IFacultyFilterRequest } from './faculty.interface';
+import {
+  IFacultyFilterRequest,
+  IFacultyPayloadFilter,
+  IFacultyUserPayload,
+} from './faculty.interface';
 
 const createFaculty = async (data: Faculty): Promise<Faculty> => {
   const result = await prisma.faculty.create({
@@ -185,6 +189,86 @@ const removeCourses = async (
   return assignCoursesData;
 };
 
+const myCourses = async (
+  authUser: IFacultyUserPayload,
+  filter: IFacultyPayloadFilter
+) => {
+  if (!filter.academicSemesterId) {
+    const currentSemester = await prisma.academicSemester.findFirst({
+      where: {
+        isCurrent: true,
+      },
+    });
+
+    filter.academicSemesterId = currentSemester?.id;
+  }
+
+  const offeredCourseSections = await prisma.offeredCourseSection.findMany({
+    where: {
+      offeredCourseClassSchedules: {
+        some: {
+          faculty: {
+            facultyId: authUser.userId,
+          },
+        },
+      },
+      offeredCourse: {
+        semesterRegistration: {
+          academicSemester: {
+            id: filter.academicSemesterId,
+          },
+        },
+      },
+    },
+    include: {
+      offeredCourse: {
+        include: {
+          course: true,
+        },
+      },
+      offeredCourseClassSchedules: {
+        include: {
+          room: {
+            include: {
+              building: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const courseAndSchedule = offeredCourseSections.reduce(
+    (acc: any, obj: any) => {
+      const course = obj.offeredCourse.course;
+      const classSchedules = obj.offeredCourseClassSchedules;
+
+      const existingCourse = acc.find(
+        (item: any) => item.couse?.id === course?.id
+      );
+      if (existingCourse) {
+        existingCourse.sections.push({
+          section: obj,
+          classSchedules,
+        });
+      } else {
+        acc.push({
+          course,
+          sections: [
+            {
+              section: obj,
+              classSchedules,
+            },
+          ],
+        });
+      }
+      return acc;
+    },
+    []
+  );
+  return courseAndSchedule;
+};
+
 export const FacultyService = {
   createFaculty,
   getAllFaculties,
@@ -193,4 +277,5 @@ export const FacultyService = {
   deleteFaculty,
   assignCourses,
   removeCourses,
+  myCourses,
 };
