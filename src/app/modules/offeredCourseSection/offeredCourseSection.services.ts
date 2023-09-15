@@ -31,10 +31,7 @@ const createOfferedCourseSection = async (
   });
 
   if (!isExistOfferedCourse) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Offered course does not exist'
-    );
+    throw new ApiError(httpStatus.NOT_FOUND, 'Offered course does not exist');
   }
 
   await asyncForEach(classSchedules, async (schedule: any) => {
