@@ -206,6 +206,8 @@ const myCourses = async (
   const offeredCourseSections = await prisma.offeredCourseSection.findMany({
     where: {
       offeredCourseClassSchedules: {
+        //offerdCourseClassSchedules has many data but not every is of one faculty
+        //thats why use some
         some: {
           faculty: {
             facultyId: authUser.userId,
@@ -238,6 +240,7 @@ const myCourses = async (
     },
   });
 
+  //remove duplicate course
   const courseAndSchedule = offeredCourseSections.reduce(
     (acc: any, obj: any) => {
       const course = obj.offeredCourse.course;
