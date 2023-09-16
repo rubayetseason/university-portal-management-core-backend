@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Prisma, Student } from '@prisma/client';
+import { Prisma, Student, StudentEnrolledCourseStatus } from '@prisma/client';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
@@ -13,6 +13,7 @@ import {
   IMyCoursesPayloadFilter,
   IStudentFilterRequest,
 } from './student.interface';
+import { StudentUtils } from './student.utils';
 
 const createStudent = async (data: Student): Promise<Student> => {
   const result = await prisma.student.create({
@@ -231,6 +232,43 @@ const getMyCourseSchedule = async (
   return result;
 };
 
+const getMyAcademicInfo = async (authUserId: string): Promise<any> => {
+  //get acadmicInfo of student
+  const academicInfo = await prisma.studentAcademicInfo.findFirst({
+    where: {
+      student: {
+        studentId: authUserId,
+      },
+    },
+  });
+
+  //get studentEnrolledCourses which are completed
+  const enrolledCourses = await prisma.studentEnrolledCourse.findMany({
+    where: {
+      student: {
+        studentId: authUserId,
+      },
+      status: StudentEnrolledCourseStatus.COMPLETED,
+    },
+    include: {
+      course: true,
+      academicSemester: true,
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+
+  //show the data semester wise
+  const groupByAcademicSemesterData =
+    StudentUtils.groupByAcademicSemester(enrolledCourses);
+
+  return {
+    academicInfo,
+    courses: groupByAcademicSemesterData,
+  };
+};
+
 export const StudentService = {
   createStudent,
   getAllStudents,
@@ -239,4 +277,5 @@ export const StudentService = {
   deleteStudent,
   myCourses,
   getMyCourseSchedule,
+  getMyAcademicInfo,
 };
