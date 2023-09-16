@@ -15,6 +15,12 @@ export type IFacultyPayloadFilter = {
 };
 
 export type IFacultyUserPayload = {
-    userId: string;
-    role: string;
-  }
+  userId: string;
+  role: string;
+};
+
+export type IFacultyMyCourseStudentsRequest = {
+  academicSemesterId?: string | undefined;
+  courseId?: string | undefined;
+  offeredCourseSectionId?: string | undefined;
+};
