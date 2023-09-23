@@ -76,7 +76,7 @@ const moduleRoutes = [
     route: StudentEnrolledCourseMarksRoutes,
   },
   {
-    path: '/student-enrolled-course-marksstudent-enrolled-course-marks',
+    path: '/student-semester-payment',
     route: studentSemesterPaymentRoutes,
   },
 ];
