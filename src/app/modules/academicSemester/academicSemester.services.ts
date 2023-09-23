@@ -10,6 +10,7 @@ import { RedisClient } from '../../../shared/redis';
 import {
   AcademicSemesterSearchAbleFields,
   EVENT_ACADEMIC_SEMESTER_CREATED,
+  EVENT_ACADEMIC_SEMESTER_DELETED,
   EVENT_ACADEMIC_SEMESTER_UPDATED,
   academicSemesterTitleCodeMapper,
 } from './academicSemester.constants';
@@ -153,6 +154,14 @@ const deleteSemester = async (id: string): Promise<AcademicSemester> => {
       id,
     },
   });
+
+  if (result) {
+    await RedisClient.publish(
+      EVENT_ACADEMIC_SEMESTER_DELETED,
+      JSON.stringify(result)
+    );
+  }
+
   return result;
 };
 
