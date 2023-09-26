@@ -10,6 +10,7 @@ import {
   facultySearchableFields,
 } from './faculty.constants';
 import {
+  FacultyCreatedEvent,
   IFacultyFilterRequest,
   IFacultyMyCourseStudentsRequest,
   IFacultyPayloadFilter,
@@ -352,6 +353,27 @@ const getMyCourseStudents = async (
   };
 };
 
+const createFacultyFromEvent = async (
+  e: FacultyCreatedEvent
+): Promise<void> => {
+  const faculty: Partial<Faculty> = {
+    facultyId: e.id,
+    firstName: e.name.firstName,
+    lastName: e.name.lastName,
+    middleName: e.name.middleName,
+    profileImage: e.profileImage,
+    email: e.email,
+    contactNo: e.contactNo,
+    gender: e.gender,
+    bloodGroup: e.bloodGroup,
+    designation: e.designation,
+    academicDepartmentId: e.academicDepartment.syncId,
+    academicFacultyId: e.academicFaculty.syncId,
+  };
+
+  await createFaculty(faculty as Faculty);
+};
+
 export const FacultyService = {
   createFaculty,
   getAllFaculties,
@@ -362,4 +384,5 @@ export const FacultyService = {
   removeCourses,
   myCourses,
   getMyCourseStudents,
+  createFacultyFromEvent,
 };
